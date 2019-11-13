@@ -1,0 +1,27 @@
+<ons-template id="content_register.html">
+<ons-page ng-controller="cregisterController as ctl">
+    <ons-toolbar>
+        <div class="left">
+            <ons-back-button>戻る</ons-back-button>
+        </div>
+        <div class="center">大会登録</div>
+    </ons-toolbar>
+    <div class="content">
+        <ons-list>
+            <ons-list-header>大会名</ons-list-header>
+            <ons-list-item>
+                <ons-input type="text" class="input-m" modifier="underbar" ng-model="ctl.name"></ons-input>
+            </ons-list-item>
+        </ons-list>
+        <ons-list>
+            <ons-list-header>日付</ons-list-header>
+            <ons-list-item>
+                <ons-input type="date" modifier="underbar" ng-model="ctl.date"></ons-input>
+            </ons-list-item>
+        </ons-list>
+        <div class="in-center" style="margin-top: 20px">
+            <ons-button ng-click="ctl.sendData()">送信する</ons-button>
+        </div>
+    </div>
+</ons-page>
+</ons-template>

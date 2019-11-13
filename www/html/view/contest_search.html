@@ -1,0 +1,121 @@
+<ons-template id="csearch_index.html">
+<ons-page ng-controller="csearchController as ctl">
+    <ons-toolbar>
+        <div class="left"><ons-back-button>戻る</ons-back-button></div>
+        <div class="center">大会一覧</div>
+    </ons-toolbar>
+    <div class="content">
+    <div ng-show="!ctl.isLoading">
+        <ons-list ng-repeat="contest in ctl.contests">
+            <ons-list-header>{{contest.date}}</ons-list-header>
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.proceed(contest)">
+                {{contest.name}}
+            </ons-list-item>
+        </ons-list>
+    </div>
+    <div ng-show="ctl.isLoading">
+        <ng-include src="'loading.html'"></ng-include>
+    </div>
+    </div>
+</ons-page>
+</ons-template>
+
+<ons-template id="csearch_detail.html">
+<ons-page ng-controller="csearchdetailController as ctl">
+    <ons-toolbar>
+        <div class="left"><ons-back-button>戻る</ons-back-button></div>
+        <div class="center">大会詳細</div>
+    </ons-toolbar>
+    <div class="content">
+        <div ng-show="!ctl.isLoading">
+            <h3>{{ctl.contest.name}}（{{ctl.contest.date}}）</h3>
+            <span class="padding-left">参加者</span>
+            <ons-list ng-repeat="(cl, players) in ctl.playerIndex">
+                <ons-list-header>{{cl}}級（{{ctl.classIndex[cl].count}}人）</ons-list-header>
+                <ons-list-item>{{players.join("、")}}</ons-list-item>
+            </ons-list>
+            <div ng-repeat="(round, classes) in ctl.records" class="next-row">
+            <span class="padding-left">{{round}}回戦</span>
+            <ons-list ng-repeat="(cl, games) in classes">
+                <ons-list-header>{{cl}}級</ons-list-header>
+                <ons-list-item modifier="chevron" tappable ng-repeat="game in games" ng-click="ctl.proceed(game)">
+                <ons-row>
+                    <ons-col ng-repeat="data in ctl.arrange(game) track by $index" width="{{ctl.widths[$index]}}">
+                        {{data}}
+                    </ons-col>
+                </ons-row>
+                </ons-list-item>
+            </ons-list>
+            </div>
+            <div class="in-center next-row">
+                <ons-button style="background-color: #F40"
+                    ng-click="ctl.confirmDelete()">
+                    削除する
+                </ons-button>
+            </div>
+        </div>
+        <div ng-show="ctl.isLoading">
+            <ng-include src="'loading.html'"></ng-include>
+        </div>
+    </div>
+</ons-page>
+</ons-template>
+
+<ons-template id="csearch_edit.html">
+<ons-page ng-controller="csearcheditController as ctl">
+    <ons-toolbar>
+        <div class="left"><ons-back-button>戻る</ons-back-button></div>
+        <div class="center">試合編集</div>
+    </ons-toolbar>
+    <div class="content">
+        <p>{{ctl.record.round}}回戦</p>
+        <ons-list>
+            <ons-list-header>対戦結果</ons-list-header>
+            <ons-list-item>
+                勝敗：{{ctl.record.player}} {{ctl.record.result ? "× ○" : "○ ×"}} {{ctl.record.opponent}}
+            </ons-list-item>
+            <ons-list-item>
+                枚数差：<ons-input type="number" modifier="underbar" ng-model="ctl.record.diff" min="1" max="50" style="width:35px"></ons-input>
+                <div style="margin-left: 30px">
+                    <ons-button ng-click="ctl.addDiff(1)">＋</ons-button>
+                    <ons-button modifier="quiet" ng-click="ctl.addDiff(-1)">－</ons-button>
+                </div>
+            </ons-list-item>
+        </ons-list>
+        <ons-list>
+            <ons-list-header>対戦者姓</ons-list-header>
+            <ons-list-item>
+                <ons-input type="text" modifier="underbar" ng-model="ctl.record.opponentLastName" 
+                    ng-change="ctl.record.opponent = ctl.record.opponentLastName + ' ' + ctl.record.opponentFirstName"></ons-input>
+            </ons-list-item>
+        </ons-list>
+        <ons-list>
+            <ons-list-header>対戦者名</ons-list-header>
+            <ons-list-item>
+                <ons-input type="text" modifier="underbar" ng-model="ctl.record.opponentFirstName" 
+                    ng-change="ctl.record.opponent = ctl.record.opponentLastName + ' ' + ctl.record.opponentFirstName"></ons-input>
+            </ons-list-item>
+        </ons-list>
+        <ons-list>
+            <ons-list-header>所属</ons-list-header>
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.glistshow = !ctl.glistshow">{{ctl.record.belong}}</ons-list-item>
+            <div ng-show="ctl.glistshow">
+                <ons-button modifier="quiet" ng-repeat="head in ctl.kana" style="width:16%" ng-click="ctl.gshow = head">{{head}}</ons-button>
+                <div ng-repeat="head in ctl.kana" ng-show="ctl.gshow == head">
+                    <ons-list-item ng-repeat="group in ctl.groupIndex[head]" ng-click="ctl.gshow = ''">
+                        <label class="left">
+                            <ons-input type="radio" input-id="crgroup-{{$index}}" value="{{group.name}}" ng-model="ctl.record.belong"></ons-input>
+                        </label>
+                        <label for="crgroup-{{$index}}" class="center">
+                            {{group.name}}
+                        </label>
+                    </ons-list-item>
+                </div>        
+            </div>
+        </ons-list>
+        <div class="in-center next-row">
+            <ons-button ng-click="ctl.sendData()">更新する</ons-button>
+        </div>
+    </div>
+</ons-page>
+</ons-template>

@@ -1,0 +1,302 @@
+<ons-sliding-menu var="searchMenu" main-page="search_settings.html" menu-page="search_menu.html"
+    max-slide-distance="200px" side="left" swipeable="true"
+    ng-controller="searchController as ctl">
+</ons-sliding-menu>
+
+<ons-template id="search_menu.html">
+<ons-page>
+    <ons-list>
+        <ons-list-item tappable modifier="chevron" ng-click="searchMenu.setMainPage('search_result.html', {closeMenu: true})">
+            検索結果
+        </ons-list-item>
+        <ons-list-item tappable modifier="chevron" ng-click="searchMenu.setMainPage('search_settings.html', {closeMenu: true})">
+            条件設定
+        </ons-list-item>
+    </ons-list>
+</ons-page>
+</ons-template>
+
+<ons-template id="search_result.html">
+<ons-page>
+    <ons-toolbar>
+        <div class="center">検索結果</div>
+        <div class="right">
+            <ons-toolbar-button ng-click="searchMenu.toggleMenu()">
+                <ons-icon icon="ion-navicon" class="menu-icon"></ons-icon>
+            </ons-toolbar-button>
+        </div>
+    </ons-toolbar>
+    <div class="content">
+        <div ng-show="!ctl.isLoading">
+            <p>{{ctl.count}}件の記録が見つかりました。</p>
+            <ons-list ng-repeat="record in ctl.records">
+                <ons-list-header>{{record.date}}</ons-list-header>
+                <ons-list-item tappable ng-repeat="game in record.games"
+                    ng-click="ctl.pageDetail(game)">
+                    <ons-row>
+                        <ons-col ng-repeat="data in ctl.arrange(game) track by $index" width="{{ctl.widths[$index]}}">
+                            {{data}}
+                        </ons-col>
+                    </ons-row>
+                </ons-list-item>
+            </ons-list>
+        </div>
+        <div ng-show="ctl.isLoading">
+            <ng-include src="'loading.html'"></ng-include>
+        </div>
+    </div>
+</ons-page>
+</ons-template>
+
+<ons-template id="search_detail.html">
+<ons-page>
+    <ons-toolbar>
+        <div class="center">試合詳細</div>
+        <div class="right">
+            <ons-toolbar-button ng-click="searchMenu.toggleMenu()">
+                <ons-icon icon="ion-navicon" class="menu-icon"></ons-icon>
+            </ons-toolbar-button>
+        </div>
+    </ons-toolbar>
+    <div class="content">
+        <div ng-show="!ctl.isLoading">
+            <ons-button modifier="quiet" ng-click="searchMenu.setMainPage('search_result.html')">一覧に戻る</ons-button>
+            <div ng-if="!ctl.forEdit">
+                <div class="blank-s"></div>
+                <ons-list>
+                    <ons-list-header>日付</ons-list-header>
+                    <ons-list-item>{{ctl.game.date}}</ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>試合数</ons-list-header>
+                    <ons-list-item>{{ctl.game.round}}試合目</ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>対戦</ons-list-header>
+                    <ons-list-item>{{ctl.showResult(ctl.game)}}</ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>試合形式</ons-list-header>
+                    <ons-list-item>{{ctl.game.type}}</ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>読手</ons-list-header>
+                    <ons-list-item>{{ctl.game.songer}}</ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>コメント</ons-list-header>
+                    <ons-list-item>{{ctl.game.comment}}</ons-list-item>
+                </ons-list>
+                <div class="blank-s"></div>
+                <ons-row>
+                    <ons-col class="in-center">
+                    <ons-button ng-click="ctl.forEdit = true">編集する</ons-button>
+                    </ons-col>
+                    <ons-col class="in-center">
+                    <ons-button ng-click="ctl.deleteRecord()" style="background-color: #F40">削除する</ons-button>
+                    </ons-col>
+                </ons-row>
+            </div>
+            <div ng-if="ctl.forEdit">
+                <ons-list>
+                    <ons-list-header>日付</ons-list-header>
+                    <ons-list-item>
+                        <ons-input type="date" modifier="underbar" ng-model="ctl.newDate"></ons-input>
+                    </ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>試合数</ons-list-header>
+                    <ons-list-item>
+                        <ons-input type="number" modifier="underbar" class="num-input" min="1" ng-model="ctl.newRound"></ons-input>
+                        試合目
+                    </ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>対戦</ons-list-header>
+                    <ons-list-item>{{ctl.showResult(ctl.game)}}</ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>試合形式</ons-list-header>
+                    <ons-list-item>{{ctl.game.type}}</ons-list-item>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>読手</ons-list-header>
+                    <ons-list-item ng-click="ctl.showChange('songerdetail')">{{ctl.newSonger}}</ons-list-item>
+                    <div ng-show="ctl.show['songerdetail']">
+                        <ons-list-item ng-repeat="songer in ctl.songerList">
+                        <label class="left">
+                            <ons-input type="radio" input-id="sdsonger-{{$index}}" ng-model="ctl.newSonger" value="{{songer.name}}"></ons-input>
+                        </label>
+                        <label for="sdsonger-{{$index}}" class="center">
+                            {{songer.name}}
+                        </label>
+                        </ons-list-item>
+                    </div>
+                </ons-list>
+                <ons-list>
+                    <ons-list-header>コメント</ons-list-header>
+                    <ons-list-item>
+                        <ons-input type="text" modifier="underbar" ng-model="ctl.newComment"></ons-input>
+                    </ons-list-item>
+                </ons-list>
+                <div class="blank-s"></div>
+                <div class="in-center">
+                    <ons-button ng-click="ctl.updateRecord()">記録を更新する</ons-button>
+                </div>
+            </div>
+        </div>
+        <div ng-show="ctl.isLoading">
+            <ng-include src="'loading.html'"></ng-include>
+        </div>
+    </div>
+</ons-page>
+</ons-template>
+
+<ons-template id="search_settings.html">
+<ons-page>
+    <ons-toolbar>
+        <div class="center">条件設定</div>
+        <div class="right">
+            <ons-toolbar-button ng-click="searchMenu.toggleMenu()">
+                <ons-icon icon="ion-navicon" class="menu-icon"></ons-icon>
+            </ons-toolbar-button>
+        </div>
+    </ons-toolbar>
+    <div class="content">
+        <ons-list>
+            <ons-list-header>日付: {{ctl.date1}} ~ {{ctl.date2}}</ons-list-header>
+
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.showChange('date1')">日付1</ons-list-item>
+            <ons-list-item ng-show="ctl.show['date1']">
+                <ons-input type="date" modifier="underbar" ng-model="ctl.date1"></ons-input>
+            </ons-list-item>
+
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.showChange('date2')">日付2</ons-list-item>
+            <ons-list-item ng-show="ctl.show['date2']">
+                <ons-input type="date" modifier="underbar" ng-model="ctl.date2"></ons-input>
+            </ons-list-item>
+        </ons-list>
+        
+        <!-- <ons-list>
+            <ons-list-header>対戦: {{ctl.showMatch()}}</ons-list-header>
+            <ons-list-item tappable modifier="chevron" ng-click="ctl.showChange('player1')">
+                対戦者1
+                <span style="margin-left: 10px">
+                    <ons-icon icon="times-circle" style="color: #F40" ng-click="ctl.player1 = undefined; ctl.showChange('player1')"></ons-icon>
+                </span>
+            </ons-list-item>
+            <div ng-show="ctl.show['player1']">
+                <ons-button modifier="quiet" ng-repeat="head in ctl.kana" style="width:16%" ng-click="ctl.showP1 = head">{{head}}</ons-button>
+                <div class="blank-s"></div>
+                <div ng-repeat="head in ctl.kana" ng-show="ctl.showP1 == head">
+                    <ons-list-item tappable ng-repeat="member in ctl.playerIndex[head]" ng-if="member.isMember" ng-click="ctl.show['player1'] = false">
+                    <label class="left">
+                        <ons-input type="radio" input-id="sp1member-{{member.index}}" value="{{member.name}}" ng-model="ctl.player1"></ons-input>
+                    </label>
+                    <label for="sp1member-{{member.index}}" class="center">
+                        {{member.name}}
+                    </label>
+                    </ons-list-item>
+                </div>      
+            </div>
+
+            <ons-list-item tappable modifier="chevron" ng-click="ctl.showChange('player2')">
+                対戦者2
+                <span style="margin-left: 10px">
+                    <ons-icon icon="times-circle" style="color: #F40" ng-click="ctl.player2 = undefined; ctl.showChange('player2')"></ons-icon>
+                </span>
+            </ons-list-item>
+            <div ng-show="ctl.show['player2']">
+                <ons-button modifier="quiet" ng-repeat="head in ctl.kana" style="width:16%" ng-click="ctl.showP2 = head">{{head}}</ons-button>
+                <div class="blank-s"></div>
+                <div ng-repeat="head in ctl.kana" ng-show="ctl.showP2 == head">
+                    <ons-list-item tappable ng-repeat="member in ctl.playerIndex[head]" ng-if="member.isMember" ng-click="ctl.show['player2'] = false">
+                    <label class="left">
+                        <ons-input type="radio" input-id="sp2member-{{member.index}}" value="{{member.name}}" ng-model="ctl.player2"></ons-input>
+                    </label>
+                    <label for="sp2member-{{member.index}}" class="center">
+                        {{member.name}}
+                    </label>
+                    </ons-list-item>
+                </div>      
+            </div>
+
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.showChange('result')">
+                勝敗
+                <span style="margin-left: 10px">
+                    <ons-icon icon="times-circle" style="color: #F40" ng-click="ctl.result = undefined; ctl.showChange('result')"></ons-icon>
+                </span>
+            </ons-list-item>
+            <ons-list-item ng-show="ctl.show['result']">
+                <ons-switch ng-model="ctl.result"></ons-switch>
+            </ons-list-item>
+        </ons-list> -->
+
+        <!-- <ons-list>
+            <ons-list-header>詳細: {{ctl.showDetail()}}</ons-list-header>
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.showChange('type')">
+                試合形式
+            </ons-list-item>
+            <div ng-show="ctl.show['type']">
+                <ons-list-item ng-repeat="type in ctl.typeList">
+                    <label class="left">
+                        <ons-input type="checkbox" input-id="stype-{{$index}}"
+                        ng-click="ctl.selectedType[type.name] = !ctl.selectedType[type.name]"></ons-input>
+                    </label>
+                    <label for="stype-{{$index}}" class="center">
+                        {{type.name}}
+                    </label>
+                </ons-list-item>
+            </div> -->
+
+            <!-- <ons-list-item modifier="chevron" tappable ng-click="ctl.showChange('detail')">
+                試合結果 {{ctl.detail}}
+                <span style="margin-left: 10px">
+                    <ons-icon icon="times-circle" style="color: #F40" ng-click="ctl.detail = undefined; ctl.showChange('detail')"></ons-icon>
+                </span>
+            </ons-list-item>
+            <div ng-show="ctl.show['detail']">
+                <ons-list-item tappable ng-repeat="detail in ctl.details" ng-show="((detail != '献上' && detail != '金星') || ctl.player1)" ng-click="ctl.show['detail'] = false">
+                <label class="left">
+                    <ons-input type="radio" input-id="sdetail-{{$index}}" ng-model="ctl.detail" value="{{detail}}"></ons-input>
+                </label>
+                <label for="sdetail-{{$index}}" class="center">
+                    {{detail}}
+                </label>
+                </ons-list-item>
+            </div>
+
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.showChange('songer')">
+                読手 {{ctl.songer}}
+                <span style="margin-left: 10px">
+                    <ons-icon icon="times-circle" style="color: #F40" ng-click="ctl.songer = undefined; ctl.showChange('songer')"></ons-icon>
+                </span>
+            </ons-list-item>
+            <div ng-show="ctl.show['songer']">
+                <ons-list-item tappable ng-repeat="songer in ctl.songerList" ng-click="ctl.show['songer'] = false">
+                <label class="left">
+                    <ons-input type="radio" input-id="ssonger-{{$index}}" ng-model="ctl.songer" value="{{songer.name}}"></ons-input>
+                </label>
+                <label for="ssonger-{{$index}}" class="center">
+                    {{songer.name}}
+                </label>
+                </ons-list-item>
+            </div>
+
+            <ons-list-item modifier="chevron" tappable ng-click="ctl.showChange('comment')">
+                コメント {{ctl.comment ? "あり" : ""}}
+                <span style="margin-left: 10px">
+                    <ons-icon icon="times-circle" style="color: #F40" ng-click="ctl.comment = undefined; ctl.showChange('comment')"></ons-icon>
+                </span>
+            </ons-list-item>
+            <ons-list-item ng-show="ctl.show['comment']">
+                <ons-switch ng-model="ctl.comment"></ons-switch>
+            </ons-list-item>
+        </ons-list> -->
+        <div class="blank-s"></div>
+        <div class="in-center">
+            <ons-button ng-click="ctl.searchRecord()">この条件で検索する</ons-button>
+        </div>
+    </div>
+</ons-page>
+</ons-template>
